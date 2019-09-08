@@ -1,0 +1,62 @@
+package com.meiziyu.annotation;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * @Author: Meiziyu
+ * @Date: 2019/6/3 17:07
+ * @Email 308348194@qq.com
+ */
+
+/**
+ * 枚举值校验注解实现
+ *
+ * @author: zetting
+ * @date:2018/12/18
+ */
+
+public class EnumValidtor implements ConstraintValidator<EnumValidAnnotation, Object>, Annotation {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private List<Object> values = new ArrayList<>();
+
+    @Override
+    public void initialize(EnumValidAnnotation enumValidator) {
+        Class<?> clz = enumValidator.value();
+        Object[] ojects = clz.getEnumConstants();
+        try {
+            Method method = clz.getMethod("getValue");
+            if (Objects.isNull(method)) {
+                throw new Exception(String.format("枚举对象{}缺少字段名为value的字段",
+                        clz.getName()));
+            }
+            Object value = null;
+            for (Object obj : ojects) {
+                value = method.invoke(obj);
+                values.add(value);
+            }
+        } catch (Exception e) {
+            logger.error("[处理枚举校验异常]", e);
+        }
+    }
+
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return null;
+    }
+
+    @Override
+    public boolean isValid(Object value, ConstraintValidatorContext constraintValidatorContext) {
+        return Objects.isNull(value) || values.contains(value) ? true : false;
+    }
+}
